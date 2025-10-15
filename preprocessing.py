@@ -46,7 +46,7 @@ def compute_supervoxels(volume, n_segments=500, compactness=0.1):
     # Normalize to [0, 1] for slic
     norm_volume = (volume - np.min(volume)) / (np.max(volume) - np.min(volume))
     # slic with multichannel=False to ensure 3D processing
-    labels = slic(norm_volume, n_segments=n_segments, compactness=compactness, start_label=1, multichannel=False)
+    labels = slic(norm_volume, n_segments=n_segments, compactness=compactness, start_label=1)
     return labels
 
 def compute_supervoxel_features(volume, labels):
