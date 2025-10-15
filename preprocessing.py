@@ -42,15 +42,25 @@ def preprocess(volume, hu_min=-1000, hu_max=400):
     volume = (volume - mean) / std
     return volume
 
+from skimage.segmentation import slic
+import numpy as np
 
 def compute_supervoxels(volume, n_segments=500, compactness=0.1):
-    if volume.ndim != 3:
-        raise ValueError(f"Input volume must be 3D, got shape {volume.shape}")
-    norm_volume = ((volume - np.min(volume)) / np.ptp(volume)).astype(np.float32)
-    labels = slic(norm_volume, n_segments=n_segments, compactness=compactness, start_label=1)
+    labels = np.zeros_like(volume, dtype=np.int32)
+    label_offset = 1  # to keep labels unique across slices
+
+    for i in range(volume.shape[0]):  # iterate over slices (Z)
+        slice_ = volume[i]
+        norm_slice = ((slice_ - np.min(slice_)) / np.ptp(slice_)).astype(np.float32)
+        slice_labels = slic(norm_slice, n_segments=n_segments, compactness=compactness, start_label=label_offset)
+        labels[i] = slice_labels
+        label_offset += slice_labels.max()  # update offset so labels don't overlap
+
     print(f"compute_supervoxels: input shape {volume.shape}, labels shape {labels.shape}")
     assert labels.shape == volume.shape, f"Supervoxels shape {labels.shape} != volume shape {volume.shape}"
+
     return labels
+
 
 
 def compute_supervoxel_features(volume, labels):
