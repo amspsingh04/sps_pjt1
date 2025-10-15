@@ -44,20 +44,23 @@ def preprocess(volume, hu_min=-1000, hu_max=400):
 
 def compute_supervoxels(volume, n_segments=500, compactness=0.1):
     labels = np.zeros_like(volume, dtype=np.int32)
-    label_offset = 1  # to keep labels unique across slices
-
-    for i in range(volume.shape[0]):  # iterate over slices (Z)
+    label_offset = 1  
+    label_offset = 0
+    labels = np.zeros_like(volume, dtype=np.int32)
+    for i in range(volume.shape[0]):
         slice_ = volume[i]
         norm_slice = ((slice_ - np.min(slice_)) / np.ptp(slice_)).astype(np.float32)
         slice_labels = slic(
             norm_slice,
             n_segments=n_segments,
             compactness=compactness,
-            start_label=label_offset,
+            start_label=1,   # Always 1 or 0
             channel_axis=None
         )
+        slice_labels = slice_labels + label_offset
         labels[i] = slice_labels
         label_offset += slice_labels.max()
+
 
     print(f"compute_supervoxels: input shape {volume.shape}, labels shape {labels.shape}")
     assert labels.shape == volume.shape, f"Supervoxels shape {labels.shape} != volume shape {volume.shape}"
