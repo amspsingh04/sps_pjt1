@@ -21,20 +21,21 @@ def extract_dino_feature_2d(patch_2d, model, transform):
 
 
 def get_supervoxel_2d_patch(volume, supervoxels, sv_id):
-    # Find slices where sv_id exists, pick slice with max pixels
-    slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1,2)))[0]
-    if len(slices_idx) == 0:
-        return None
-    max_slice = max(slices_idx, key=lambda z: np.sum(supervoxels[z] == sv_id))
-    mask_2d = (supervoxels[max_slice] == sv_id)
-    coords = np.argwhere(mask_2d)
-    y0, x0 = coords.min(axis=0)
-    y1, x1 = coords.max(axis=0) + 1
-    patch = volume[max_slice, y0:y1, x0:x1]
-    # Normalize patch to 0-255 uint8
-    patch_norm = (patch - patch.min()) / (patch.max() - patch.min() + 1e-8)
-    patch_img = (patch_norm * 255).astype(np.uint8)
-    return patch_img
+    print(f"supervoxels shape: {supervoxels.shape}")
+    if supervoxels.ndim == 3:
+        slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1,2)))[0]
+        if len(slices_idx) == 0:
+            raise ValueError(f"Supervoxel id {sv_id} not found in any slice")
+        slice_idx = slices_idx[len(slices_idx)//2]  # take middle slice
+        mask_2d = supervoxels[slice_idx] == sv_id
+        patch = volume[slice_idx] * mask_2d
+    elif supervoxels.ndim == 2:
+        mask_2d = supervoxels == sv_id
+        patch = volume * mask_2d
+    else:
+        raise ValueError(f"Unsupported supervoxels ndim {supervoxels.ndim}")
+    return patch
+
 
 
 def compute_spatial_features(supervoxels):
