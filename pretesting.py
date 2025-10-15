@@ -4,6 +4,7 @@ import numpy as np
 import SimpleITK as sitk
 from skimage.segmentation import slic
 import pandas as pd
+import joblib  # for saving intermediate data
 
 
 def load_nifti(path):
@@ -69,8 +70,10 @@ def compute_supervoxel_features(volume, labels):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Preprocess a 3D CT volume and compute supervoxel features.")
-    parser.add_argument("input_path", type=str, help="Path to the .nii.gz file")
+    parser = argparse.ArgumentParser(description="Preprocess 3D CT volume & compute supervoxels")
+    parser.add_argument("input_path", type=str, help="Path to .nii.gz file")
+    parser.add_argument("--out_prefix", type=str, default="output/preprocessed", help="Prefix for saved outputs")
+
     args = parser.parse_args()
 
     print("Loading volume...")
@@ -92,6 +95,14 @@ def main():
     print(features_df.head())
 
     print(f"Total number of supervoxels: {features_df['supervoxel_id'].nunique()}")
+
+    # Save outputs for next script (use joblib or numpy/pandas)
+    joblib.dump(preprocessed, f"{args.out_prefix}_volume.pkl")
+    joblib.dump(supervoxels, f"{args.out_prefix}_supervoxels.pkl")
+    features_df.to_csv(f"{args.out_prefix}_features.csv", index=False)
+
+    print(f"Saved preprocessed volume, supervoxels, and features with prefix '{args.out_prefix}'")
+
 
 if __name__ == "__main__":
     main()
