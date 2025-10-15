@@ -22,6 +22,7 @@ def extract_dino_feature_2d(patch_2d, model, transform):
     return feat.squeeze().cpu().numpy()
 
 
+<<<<<<< HEAD
 def get_supervoxel_2d_patch(volume, supervoxels, sv_id, patch_size=96):
 
     slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1,2)))[0]
@@ -62,6 +63,22 @@ def get_supervoxel_2d_patch(volume, supervoxels, sv_id, patch_size=96):
     if pad_y > 0 or pad_x > 0:
         patch = np.pad(patch, ((0, pad_y), (0, pad_x)), mode='constant', constant_values=0)
 
+=======
+def get_supervoxel_2d_patch(volume, supervoxels, sv_id):
+    print(f"supervoxels shape: {supervoxels.shape}")
+    if supervoxels.ndim == 3:
+        slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1,2)))[0]
+        if len(slices_idx) == 0:
+            raise ValueError(f"Supervoxel id {sv_id} not found in any slice")
+        slice_idx = slices_idx[len(slices_idx)//2]  # take middle slice
+        mask_2d = supervoxels[slice_idx] == sv_id
+        patch = volume[slice_idx] * mask_2d
+    elif supervoxels.ndim == 2:
+        mask_2d = supervoxels == sv_id
+        patch = volume * mask_2d
+    else:
+        raise ValueError(f"Unsupported supervoxels ndim {supervoxels.ndim}")
+>>>>>>> parent of b3fa10b (.)
     return patch
 
 
