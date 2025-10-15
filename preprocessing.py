@@ -43,12 +43,13 @@ def preprocess(volume, hu_min=-1000, hu_max=400):
     return volume
 
 def compute_supervoxels(volume, n_segments=500, compactness=0.1):
-    # Normalize to [0, 1] for slic
-    norm_volume = (volume - np.min(volume)) / (np.max(volume) - np.min(volume))
-    # slic with multichannel=False to ensure 3D processing
+    if volume.ndim != 3:
+        raise ValueError(f"Input volume must be 3D, got shape {volume.shape}")
+    norm_volume = (volume - np.min(volume)) / (np.ptp(volume))  # ptp = max-min
     labels = slic(norm_volume, n_segments=n_segments, compactness=compactness, start_label=1)
-    return labels
+    assert labels.shape == volume.shape, f"Supervoxels shape {labels.shape} != volume shape {volume.shape}"
 
+    return labels
 def compute_supervoxel_features(volume, labels):
     regions = np.unique(labels)
     features = []
