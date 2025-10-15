@@ -20,30 +20,39 @@ def extract_dino_feature_2d(patch_2d, model, transform):
     return feat.squeeze().cpu().numpy()
 
 
-def get_supervoxel_2d_patch(volume, supervoxels, sv_id):
-    print(f"volume shape: {volume.shape}, supervoxels shape: {supervoxels.shape}")
-    if supervoxels.ndim == 3:
-        slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1, 2)))[0]
-        if len(slices_idx) == 0:
-            raise ValueError(f"Supervoxel id {sv_id} not found in any slice")
-        slice_idx = slices_idx[len(slices_idx)//2]
-        mask_2d = supervoxels[slice_idx] == sv_id  # mask for slice
-        patch = volume[slice_idx] * mask_2d
-    elif supervoxels.ndim == 2:
-        coords = np.argwhere(supervoxels == sv_id)
-        if coords.size == 0:
-            raise ValueError(f"Supervoxel id {sv_id} not found")
-        
-        patches = []
-        for z, y in coords:
-            patch_1d = volume[z, y, :]  # get full X line
-            patches.append(patch_1d)
-        
-        patch = np.array(patches)  # shape (N, X)
-    else:
-        raise ValueError(f"Unsupported supervoxels ndim {supervoxels.ndim}")
-    return patch
+def get_supervoxel_2d_patch(volume, supervoxels, sv_id, patch_size=96):
+    slices_idx = np.where(np.any(supervoxels == sv_id, axis=1))[0]
+    if len(slices_idx) == 0:
+        raise ValueError(f"Supervoxel {sv_id} not found")
 
+    slice_idx = slices_idx[len(slices_idx) // 2]
+
+    mask_2d = supervoxels[slice_idx] == sv_id  # shape (Y)
+
+    ys, xs = np.where(mask_2d)
+    if len(ys) == 0:
+        raise ValueError(f"Supervoxel {sv_id} mask empty in slice {slice_idx}")
+
+    y_min, y_max = ys.min(), ys.max()
+    x_min, x_max = xs.min(), xs.max()
+
+    center_y = (y_min + y_max) // 2
+    center_x = (x_min + x_max) // 2
+
+    half_size = patch_size // 2
+    start_y = max(center_y - half_size, 0)
+    end_y = min(center_y + half_size, volume.shape[1])
+    start_x = max(center_x - half_size, 0)
+    end_x = min(center_x + half_size, volume.shape[2])
+
+    patch = volume[slice_idx, start_y:end_y, start_x:end_x]
+
+    pad_y = patch_size - patch.shape[0]
+    pad_x = patch_size - patch.shape[1]
+    if pad_y > 0 or pad_x > 0:
+        patch = np.pad(patch, ((0, pad_y), (0, pad_x)), mode='constant', constant_values=0)
+
+    return patch
 
 
 def compute_spatial_features(supervoxels):
@@ -114,7 +123,7 @@ def main():
         dino_features_list.append(dino_feat)
 
     dino_features_array = np.vstack(dino_features_list)
-    dino_df = pd.DataFrame(dino_features_array, index=features_df.index).add_prefix('dino_feat_')
+    dino_df = pd.DataFrame(dino_features_array, index=features_df['supervoxel_id']).add_prefix('dino_feat_')
 
     print("Computing spatial features...")
     spatial_df = compute_spatial_features(supervoxels)
