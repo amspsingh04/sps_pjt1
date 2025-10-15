@@ -21,17 +21,25 @@ def extract_dino_feature_2d(patch_2d, model, transform):
 
 
 def get_supervoxel_2d_patch(volume, supervoxels, sv_id):
-    print(f"supervoxels shape: {supervoxels.shape}")
+    print(f"volume shape: {volume.shape}, supervoxels shape: {supervoxels.shape}")
     if supervoxels.ndim == 3:
-        slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1,2)))[0]
+        slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1, 2)))[0]
         if len(slices_idx) == 0:
             raise ValueError(f"Supervoxel id {sv_id} not found in any slice")
-        slice_idx = slices_idx[len(slices_idx)//2]  # take middle slice
-        mask_2d = supervoxels[slice_idx] == sv_id
+        slice_idx = slices_idx[len(slices_idx)//2]
+        mask_2d = supervoxels[slice_idx] == sv_id  # mask for slice
         patch = volume[slice_idx] * mask_2d
     elif supervoxels.ndim == 2:
-        mask_2d = supervoxels == sv_id
-        patch = volume * mask_2d
+        coords = np.argwhere(supervoxels == sv_id)
+        if coords.size == 0:
+            raise ValueError(f"Supervoxel id {sv_id} not found")
+        
+        patches = []
+        for z, y in coords:
+            patch_1d = volume[z, y, :]  # get full X line
+            patches.append(patch_1d)
+        
+        patch = np.array(patches)  # shape (N, X)
     else:
         raise ValueError(f"Unsupported supervoxels ndim {supervoxels.ndim}")
     return patch
