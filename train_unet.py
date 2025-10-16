@@ -89,7 +89,7 @@ class GNNUNet(Module):
 
 # In train_unet.py
 
-def load_and_prepare_graph(gpickle_path, num_classes=3, train_ratio=0.7, val_ratio=0.15):
+def load_and_prepare_graph(gpickle_path, label_mapping_path, num_classes=3, train_ratio=0.7, val_ratio=0.15):
     print(f" G-G Loading graph from: {gpickle_path}")
     with open(gpickle_path, "rb") as f:
         G = pickle.load(f)
@@ -179,14 +179,16 @@ def main():
     parser.add_argument('--pool_ratio', type=float, default=0.5, help="Graph pooling ratio.")
     parser.add_argument('--heads', type=int, default=4, help="Number of attention heads in GATConv.")
     parser.add_argument('--num_classes', type=int, default=3, help="Number of segmentation classes.")
+    parser.add_argument('--graph_path', type=str, required=True, help="Path to the .gpickle graph file.")
+    parser.add_argument('--label_map_path', type=str, required=True, help="Path to the supervoxel_label_mapping.pkl file.")
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
     data, num_classes = load_and_prepare_graph(
-        args.graph_path, 
-        num_classes=args.num_classes
-    )
+    args.graph_path,
+    args.label_map_path, # Pass the new argument
+    num_classes=args.num_classes)
     data = data.to(device)
 
     model = GNNUNet(
