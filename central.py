@@ -21,7 +21,7 @@ def run_graph_build(volume_pkl, supervoxels_pkl, features_csv, out_graph):
 
 
 def main():
-    input_nii = "dataset/imagesTr/hippocampus_001.nii.gz" #only thing that needs to change
+    input_nii = "PanTS/data/ImageTr/PanTS_00000001/ct.nii.gz" #only thing that needs to change
     out_prefix = "output/preprocessed"
     graph_out = "output/supervoxel_graph.gpickle"
 
