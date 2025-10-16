@@ -179,7 +179,6 @@ def main():
     parser.add_argument('--pool_ratio', type=float, default=0.5, help="Graph pooling ratio.")
     parser.add_argument('--heads', type=int, default=4, help="Number of attention heads in GATConv.")
     parser.add_argument('--num_classes', type=int, default=3, help="Number of segmentation classes.")
-    parser.add_argument('--graph_path', type=str, required=True, help="Path to the .gpickle graph file.")
     parser.add_argument('--label_map_path', type=str, required=True, help="Path to the supervoxel_label_mapping.pkl file.")
     args = parser.parse_args()
 
