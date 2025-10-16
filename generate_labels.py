@@ -4,17 +4,24 @@ import nibabel as nib
 from scipy import stats
 import networkx as nx
 import joblib
+import argparse
+
+parser = argparse.ArgumentParser(description="Generate labels for supervoxels.")
+parser.add_argument('--supervoxels_path', type=str, required=True)
+parser.add_argument('--labels_nii_path', type=str, required=True)
+parser.add_argument('--graph_path', type=str, required=True)
+parser.add_argument('--output_path', type=str, required=True)
+args = parser.parse_args()
 
 print("Loading data...")
-with open('output/preprocessed_supervoxels.pkl', 'rb') as f:
+with open(args.supervoxels_path, 'rb') as f:
     supervoxel_array = joblib.load(f)
 
-label_img = nib.load('dataset/labelsTr/hippocampus_001.nii.gz')
+label_img = nib.load(args.labels_nii_path)
 label_array = label_img.get_fdata()
 
-with open('output/supervoxel_graph.gpickle', 'rb') as f:
+with open(args.graph_path, 'rb') as f:
     G = pickle.load(f)
-supervoxel_ids = list(G.nodes())
 
 print(f"Found {len(supervoxel_ids)} supervoxels.")
 print("Aggregating labels...")
@@ -32,8 +39,7 @@ for sv_id in supervoxel_ids:
     else:
         supervoxel_labels[sv_id] = 0 
         
-output_path = 'output/supervoxel_label_mapping.pkl'
-with open(output_path, 'wb') as f:
+with open(args.output_path, 'wb') as f:
     pickle.dump(supervoxel_labels, f)
 
-print(f"Label mapping saved successfully to {output_path}")
+print(f"✅ Label mapping saved successfully to {args.output_path}")
