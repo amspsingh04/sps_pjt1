@@ -87,6 +87,8 @@ class GNNUNet(Module):
     
 # In train_unet.py
 
+# In train_unet.py
+
 def load_and_prepare_graph(gpickle_path, num_classes=3, train_ratio=0.7, val_ratio=0.15):
     print(f" G-G Loading graph from: {gpickle_path}")
     with open(gpickle_path, "rb") as f:
@@ -102,21 +104,23 @@ def load_and_prepare_graph(gpickle_path, num_classes=3, train_ratio=0.7, val_rat
 
     node_features = [torch.tensor(G.nodes[n]['features']) for n in node_list]
     x = torch.stack(node_features, dim=0).float()
-    
     remapped_edges = [[node_map[u], node_map[v]] for u, v in G.edges()]
     edge_index = torch.tensor(remapped_edges, dtype=torch.long).t().contiguous()
     
     print("Graph loaded and remapped successfully.")
     print(f" - Nodes: {G.number_of_nodes()}, Edges: {G.number_of_edges()}")
 
-    labels = [supervoxel_labels[original_id] for original_id in node_list]
-    y = torch.tensor(labels, dtype=torch.long)
-
-    inferred_num_classes = len(torch.unique(y))
-    print(f"Found {inferred_num_classes} unique classes in the label data.")
-    if num_classes != inferred_num_classes:
-        print(f"Warning: --num_classes argument ({num_classes}) does not match inferred number of classes ({inferred_num_classes}). Using inferred value.")
-        num_classes = inferred_num_classes
+    original_labels = [supervoxel_labels[original_id] for original_id in node_list]
+    
+    unique_original_labels = sorted(np.unique(original_labels))
+    
+    label_remap = {original_val: new_val for new_val, original_val in enumerate(unique_original_labels)}
+    
+    remapped_labels = [label_remap[l] for l in original_labels]
+    y = torch.tensor(remapped_labels, dtype=torch.long)
+    
+    num_classes = len(unique_original_labels)
+    print(f"Found {num_classes} unique classes. Remapped to range 0-{num_classes-1}.")
 
     num_nodes = G.number_of_nodes()
     indices = np.random.permutation(num_nodes)
