@@ -56,6 +56,11 @@ for model_idx in range(num_nodes):
 
 print("   -> Probability volume created.")
 
+prob_map_path=args.output_nii.replace(".nii.gz","_prob_map.nii.gz")
+prob_map_nii=nib.Nifti1Image(prob_volume,affine,header)
+nib.save(prob_map_nii,prob_map_path)
+print(f"   -> GNN probability map saved to {prob_map_path}")
+
 # --- 4. Reconstruct Full Segmentation Mask ---
 # This is step 5. We take the argmax over the class dimension.
 print("   -> Creating final segmentation mask...")
