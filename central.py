@@ -65,7 +65,19 @@ def run_training(graph_path, label_map_path, epochs, lr):
         "--lr", str(lr)
     ], check=True)
 
-
+def run_postprocessing(supervoxels_pkl, predictions_pt, node_map_pkl, original_nii, output_nii):
+    """Calls the postprocess.py script."""
+    print("─" * 50)
+    print("STEP 5/5: Running Post-processing (Reprojection)...")
+    subprocess.run([
+        sys.executable, "postprocess.py",
+        "--supervoxels_path", supervoxels_pkl,
+        "--predictions_path", predictions_pt,
+        "--node_map_path", node_map_pkl,
+        "--original_image_nii", original_nii,
+        "--output_nii", output_nii
+    ], check=True)
+    
 def main():
     parser = argparse.ArgumentParser(description="Central orchestrator for the GNN pipeline.")
     parser.add_argument('--input_image', type=str, required=True, help="Path to the input raw NIfTI image file.")
@@ -83,12 +95,20 @@ def main():
     features_path = f"{preprocessed_prefix}_features.csv"
     graph_path = os.path.join(args.output_dir, "supervoxel_graph.gpickle")
     label_map_path = os.path.join(args.output_dir, "supervoxel_label_mapping.pkl")
+    node_map_path = os.path.join(args.output_dir, "node_mapping.pkl") # New path
+    predictions_path = os.path.join(args.output_dir, "node_predictions.pt") # New path
+    final_seg_path = os.path.join(args.output_dir, "final_segmentation.nii.gz")
 
     try:
         run_preprocessing(args.input_image, preprocessed_prefix)
+        print("─" * 50)
         run_graph_build(volume_path, supervoxels_path, features_path, graph_path)
+        print("─" * 50)
         run_label_generation(supervoxels_path, args.input_label, graph_path, label_map_path)
+        print("─" * 50)
         run_training(graph_path, label_map_path, args.epochs, args.lr)
+        print("─" * 50)
+        run_postprocessing(supervoxels_path,predictions_path,node_map_path,args.input_image,final_seg_path)
         print("─" * 50)
         print("✅ Pipeline finished successfully!")
     except subprocess.CalledProcessError as e:
