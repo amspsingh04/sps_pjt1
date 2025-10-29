@@ -15,7 +15,7 @@ import argparse
 import pickle
 import numpy as np
 import networkx as nx
-
+import os
 import torch
 import torch.nn.functional as F
 from torch.nn import Module, Sequential, Linear, ReLU
