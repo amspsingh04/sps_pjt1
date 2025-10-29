@@ -141,7 +141,12 @@ def load_and_prepare_graph(gpickle_path, label_mapping_path, num_classes=3, trai
     
     data = Data(x=x, edge_index=edge_index, y=y, 
                 train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
-    
+    node_map={node:i for i, node in enumerate(node_list)}
+    label_map_dir=os.path.dirname(label_mapping_path)
+    label_map_path=os.path.join(label_map_dir,"node_mapping.pkl")
+    with open(node_map_path,'wb') as f:
+       pickle.dump(node_map,f)
+    print(f"   -> Node mapping saved to {node_map_path}")
     return data, num_classes
 
 def train(model, data, optimizer, criterion):
@@ -219,6 +224,17 @@ def main():
     model.load_state_dict(torch.load('best_model.pt'))
     [train_acc, val_acc, test_acc], _ = test(model, data, criterion)
     print(f"Final Test Accuracy: {test_acc:.4f}")
+    
+    print("   -> Saving final model predictions for post-processing...")
+    model.eval()
+    with torch.no_grad():
+        final_log_probs = model(data.x, data.edge_index)
+        final_probs = torch.exp(final_log_probs).cpu()
+
+    output_dir = os.path.dirname(args.graph_path)
+    predictions_path = os.path.join(output_dir, "node_predictions.pt")
+    torch.save(final_probs, predictions_path)
+    print(f"Node predictions saved to {predictions_path}")
 
     
 if __name__ == "__main__":
