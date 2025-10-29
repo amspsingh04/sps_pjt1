@@ -143,10 +143,10 @@ def load_and_prepare_graph(gpickle_path, label_mapping_path, num_classes=3, trai
                 train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
     node_map={node:i for i, node in enumerate(node_list)}
     label_map_dir=os.path.dirname(label_mapping_path)
-    label_map_path=os.path.join(label_map_dir,"node_mapping.pkl")
+    node_map_path=os.path.join(label_map_dir,"node_mapping.pkl")
     with open(node_map_path,'wb') as f:
        pickle.dump(node_map,f)
-    print(f"   -> Node mapping saved to {node_map_path}")
+    print(f"Node mapping saved to {node_map_path}")
     return data, num_classes
 
 def train(model, data, optimizer, criterion):
