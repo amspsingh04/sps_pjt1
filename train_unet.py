@@ -94,7 +94,8 @@ def load_and_prepare_graph(gpickle_path, label_mapping_path, num_classes=3, trai
     with open(gpickle_path, "rb") as f:
         G = pickle.load(f)
 
-    label_mapping_path = 'output/supervoxel_label_mapping.pkl'
+    # This function *receives* label_mapping_path, so we just use it.
+    # The bad, hardcoded line has been DELETED.
     print(f"🏷️  Loading real labels from: {label_mapping_path}")
     with open(label_mapping_path, 'rb') as f:
         supervoxel_labels = pickle.load(f)
@@ -131,23 +132,22 @@ def load_and_prepare_graph(gpickle_path, label_mapping_path, num_classes=3, trai
     val_idx = torch.tensor(indices[train_end:val_end], dtype=torch.long)
     test_idx = torch.tensor(indices[val_end:], dtype=torch.long)
 
-    train_mask = torch.zeros(num_nodes, dtype=torch.bool)
-    val_mask = torch.zeros(num_nodes, dtype=torch.bool)
-    test_mask = torch.zeros(num_nodes, dtype=torch.bool)
-    
-    train_mask[train_idx] = True
-    val_mask[val_idx] = True
-    test_mask[test_idx] = True
+    train_mask = torch.zeros(num_nodes, dtype=torch.bool); train_mask[train_idx] = True
+    val_mask = torch.zeros(num_nodes, dtype=torch.bool); val_mask[val_idx] = True
+    test_mask = torch.zeros(num_nodes, dtype=torch.bool); test_mask[test_idx] = True
     
     data = Data(x=x, edge_index=edge_index, y=y, 
                 train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
-    node_map={node:i for i, node in enumerate(node_list)}
+    
+    # This part is correct and now in the right place
     label_map_dir=os.path.dirname(label_mapping_path)
     node_map_path=os.path.join(label_map_dir,"node_mapping.pkl")
     with open(node_map_path,'wb') as f:
        pickle.dump(node_map,f)
-    print(f"Node mapping saved to {node_map_path}")
+    print(f"   -> Node mapping saved to {node_map_path}")
+    
     return data, num_classes
+
 
 def train(model, data, optimizer, criterion):
     model.train()

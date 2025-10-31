@@ -22,7 +22,7 @@ def extract_dino_feature_2d(patch_2d, model, transform):
 
 
 def get_supervoxel_2d_patch(volume, supervoxels, sv_id):
-    print(f"volume shape: {volume.shape}, supervoxels shape: {supervoxels.shape}")
+    
     if supervoxels.ndim == 3:
         slices_idx = np.where(np.any(supervoxels == sv_id, axis=(1, 2)))[0]
         if len(slices_idx) == 0:
@@ -125,7 +125,7 @@ def main():
         else:
             dino_feat = extract_dino_feature_2d(patch, model, transform)
         dino_features_list.append(dino_feat)
-
+    print(f"volume shape: {volume.shape}, supervoxels shape: {supervoxels.shape}")
     dino_features_array = np.vstack(dino_features_list)
     dino_df = pd.DataFrame(dino_features_array, index=features_df.index).add_prefix('dino_feat_')
 
