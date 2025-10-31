@@ -1,8 +1,7 @@
 # predict.py
 """
 The Grand Unified Inference Script.
-This script chains the entire GNN + CNN + Post-processing pipeline
-to predict a segmentation mask from a single, new CT scan.
+(Corrected for GNN/Refiner model mismatch)
 """
 
 import argparse
@@ -19,7 +18,7 @@ import nibabel as nib
 from scipy import stats, ndimage
 
 import torch
-import torch.nn as nn  # <--- Imported as nn
+import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.data import Data
 from torch_geometric.nn import GATConv, TopKPooling
@@ -43,7 +42,6 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # SECTION 1: MODEL CLASS DEFINITIONS
 # =====================================================================================
 
-# --- ❗ FIX 1: Inherit from nn.Module ---
 class GNNUNet(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers=3, pool_ratio=0.5, heads=4):
         super().__init__()
@@ -83,7 +81,6 @@ class GNNUNet(nn.Module):
         logits = self.output_layer(x)
         return F.log_softmax(logits, dim=-1)
 
-# --- ❗ FIX 1: Inherit from nn.Module ---
 class Simple3DRefiner(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -100,7 +97,6 @@ class Simple3DRefiner(nn.Module):
 
 # =====================================================================================
 # SECTION 2: HELPER FUNCTIONS
-# (No changes in this section)
 # =====================================================================================
 
 # --- Preprocessing Helpers ---
@@ -139,6 +135,25 @@ def compute_supervoxels(volume, n_segments=500, compactness=0.1):
     labels = slic(norm_volume, n_segments=n_segments, compactness=compactness, start_label=1, enforce_connectivity=True, channel_axis=None)
     return labels
 
+def compute_supervoxel_features(volume, labels):
+    regions = np.unique(labels)
+    features = []
+    for label in regions:
+        if label == 0: continue
+        mask = (labels == label)
+        if np.sum(mask) == 0: continue
+        
+        mean_intensity = np.mean(volume[mask])
+        std_intensity = np.std(volume[mask])
+        voxel_count = np.sum(mask)
+        features.append({
+            "supervoxel_id": int(label),
+            "mean_intensity": float(mean_intensity),
+            "std_intensity": float(std_intensity),
+            "voxel_count": int(voxel_count),
+        })
+    return pd.DataFrame(features)
+
 # --- Graph Building Helpers ---
 def _extract_dino_feature_2d(patch_2d, model, transform):
     img_3ch = np.stack([patch_2d]*3, axis=-1).astype(np.uint8)
@@ -158,8 +173,10 @@ def _get_supervoxel_2d_patch(volume, supervoxels, sv_id):
 
 def _compute_spatial_features(supervoxels):
     spatial_feats = []
-    for label in np.unique(supervoxels):
-        if label == 0: continue
+    all_sv_ids = np.unique(supervoxels)
+    all_sv_ids = all_sv_ids[all_sv_ids != 0] # Remove background
+    
+    for label in all_sv_ids:
         coords = np.array(np.where(supervoxels == label))
         centroid = coords.mean(axis=1)
         size = coords.ptp(axis=1) + 1
@@ -173,8 +190,8 @@ def _get_adjacency(supervoxels):
     structure = ndimage.generate_binary_structure(3, 1)
     adjacency = {}
     labels = np.unique(supervoxels)
+    labels = labels[labels != 0] # Remove background
     for label in labels:
-        if label == 0: continue
         mask = (supervoxels == label)
         dilated = ndimage.binary_dilation(mask, structure=structure)
         neighbors = np.unique(supervoxels[dilated])
@@ -214,26 +231,26 @@ def post_process_segmentation(mask, min_size=100, smooth_iterations=3):
     """
     print(f"   -> Cleaning mask (min size: {min_size}, smoothing: {smooth_iterations} iter)")
     
-    # 1. Keep Largest Connected Component & Remove Tiny Objects
     labeled_mask, num_features = label(mask, return_num=True, connectivity=3)
-    
     if num_features == 0:
         print("   -> Mask is empty. Nothing to clean.")
-        return mask # Return empty mask
+        return mask 
         
     cleaned_mask = remove_small_objects(labeled_mask, min_size=min_size)
     
     if np.sum(cleaned_mask) > 0:
         labeled_cleaned_mask = label(cleaned_mask > 0)
         component_sizes = np.bincount(labeled_cleaned_mask.ravel())
-        largest_component_label = component_sizes[1:].argmax() + 1 # (skip background label 0)
-        final_mask = (labeled_cleaned_mask == largest_component_label).astype(np.int16)
+        if len(component_sizes) > 1: # Check if any components are left
+            largest_component_label = component_sizes[1:].argmax() + 1 
+            final_mask = (labeled_cleaned_mask == largest_component_label).astype(np.int16)
+        else:
+            final_mask = np.zeros_like(cleaned_mask, dtype=np.int16)
     else:
         print("   -> No objects left after size threshold.")
         final_mask = cleaned_mask.astype(np.int16)
 
-    # 2. Smooth Boundaries (Morphological Closing)
-    if smooth_iterations > 0:
+    if smooth_iterations > 0 and np.sum(final_mask) > 0:
         print("   -> Smoothing boundaries with morphological closing...")
         final_mask = ndimage.binary_closing(final_mask, iterations=smooth_iterations).astype(np.int16)
     
@@ -252,9 +269,13 @@ def main():
     parser.add_argument("--refiner_model_path", type=str, required=True, help="Path to the trained refiner (my_best_refiner.pt)")
     parser.add_argument("--n_segments", type=int, default=400, help="Number of supervoxels to generate (must match training)")
     parser.add_argument("--min_object_size", type=int, default=100, help="Minimum size (voxels) for an object to be kept")
-    # Add arguments for our "hardcoded guesses"
     parser.add_argument("--num_gnn_classes", type=int, default=5, help="Number of classes the GNN model was trained to output.")
-    parser.add_argument("--num_refiner_classes", type=int, default=5, help="Number of classes the Refiner model was trained to output.")
+    
+    # --- ❗ NEW ARGUMENT ---
+    parser.add_argument("--num_refiner_in_channels", type=int, default=6, help="Number of INPUT channels the Refiner model EXPECTS (1 + GNN classes it was trained on).")
+    # --- END NEW ARGUMENT ---
+    
+    parser.add_argument("--num_refiner_out_classes", type=int, default=5, help="Number of classes the Refiner model was trained to OUTPUT.")
 
     args = parser.parse_args()
 
@@ -265,6 +286,10 @@ def main():
     print(f"Loading {args.input_ct}...")
     volume, spacing, original_affine, original_header = load_nifti_for_predict(args.input_ct)
     print(f"   -> Original shape: {volume.shape}")
+
+    if volume.ndim != 3:
+        print(f"   -> ❌ FATAL: Input volume is not 3D. Shape is {volume.shape}. Exiting.", file=sys.stderr)
+        sys.exit(1)
 
     print("Resampling...")
     resampled_vol = resample_volume(volume, spacing)
@@ -288,10 +313,10 @@ def main():
     ])
 
     print("Extracting DINO features (this may take a while)...")
-    dino_features_list = []
     all_sv_ids = np.unique(supervoxels_vol)
     all_sv_ids = all_sv_ids[all_sv_ids != 0] # Remove background
     
+    dino_features_list = []
     for sv_id in all_sv_ids:
         patch = _get_supervoxel_2d_patch(preprocessed_vol, supervoxels_vol, sv_id)
         if patch is None or patch.max() == 0:
@@ -306,25 +331,31 @@ def main():
     print("Extracting spatial features...")
     spatial_df = _compute_spatial_features(supervoxels_vol)
     
+    print("Extracting intensity features...")
+    intensity_df = compute_supervoxel_features(preprocessed_vol, supervoxels_vol)
+
     print("Combining features...")
     spatial_df = spatial_df.set_index('supervoxel_id')
-    features_df = spatial_df.join(dino_df).fillna(0) # Join on index
+    intensity_df = intensity_df.set_index('supervoxel_id')
+    
+    features_df = spatial_df.join(dino_df).join(intensity_df).fillna(0)
+    print(f"   -> Final feature vector shape: {features_df.shape}")
     
     print("Computing adjacency...")
     adjacency = _get_adjacency(supervoxels_vol)
     
     print("Building NetworkX graph...")
     G = nx.Graph()
+    valid_nodes = set(features_df.index)
     feat_dict = {sv_id: row.values for sv_id, row in features_df.iterrows()}
     
     for sv_id, features in feat_dict.items():
-        if sv_id in features_df.index: # Ensure sv_id is valid
-            G.add_node(sv_id, features=features)
+        G.add_node(sv_id, features=features)
         
     for node, neighbors in adjacency.items():
-        if node in G.nodes(): # Ensure source node is valid
+        if node in G.nodes(): 
             for n in neighbors:
-                if n in G.nodes(): # Ensure neighbor is a valid node
+                if n in G.nodes():
                     G.add_edge(node, n)
     
     print(f"   -> Graph built with {G.number_of_nodes()} nodes.")
@@ -348,15 +379,26 @@ def main():
     # 2. Load GNN Model
     print(f"Loading GNN model from {args.gnn_model_path}...")
     num_node_features = data.num_node_features
-    NUM_GNN_CLASSES = args.num_gnn_classes # Use argument
+    NUM_GNN_CLASSES = args.num_gnn_classes 
     
     gnn_model = GNNUNet(
         in_channels=num_node_features,
-        hidden_channels=64, # Must match the model you saved
+        hidden_channels=64,
         out_channels=NUM_GNN_CLASSES,
-        heads=4 # Must match the model you saved
+        heads=4
     ).to(DEVICE)
-    gnn_model.load_state_dict(torch.load(args.gnn_model_path, map_location=DEVICE))
+    
+    try:
+        gnn_model.load_state_dict(torch.load(args.gnn_model_path, map_location=DEVICE))
+    except RuntimeError as e:
+        print("\n" + "="*50)
+        print("   -> ❌ FATAL: GNN Model Mismatch!")
+        print("   -> The GNN model you are loading is incompatible with the graph you just built.")
+        print(f"   -> Error was: {e}")
+        print("   -> This usually means --num_gnn_classes is wrong, or the features are different.")
+        print("="*50 + "\n")
+        sys.exit(1)
+        
     gnn_model.eval()
     
     # 3. Run GNN Inference
@@ -370,9 +412,9 @@ def main():
     coarse_prob_map = np.zeros(supervoxels_vol.shape + (NUM_GNN_CLASSES,), dtype=np.float32)
 
     for model_idx in range(probs.shape[0]):
-        if model_idx in inv_node_map: # Check if key exists
+        if model_idx in inv_node_map: 
             original_sv_id = inv_node_map[model_idx]
-            node_probs = probs[model_idx] # Shape [num_classes]
+            node_probs = probs[model_idx] 
             voxel_coords = (supervoxels_vol == original_sv_id)
             coarse_prob_map[voxel_coords] = node_probs
     
@@ -383,21 +425,28 @@ def main():
     
     # 1. Load Refiner Model
     print(f"Loading Refiner model from {args.refiner_model_path}...")
-    NUM_REFINER_CLASSES = args.num_refiner_classes # Use argument
-    
-    # --- ❗ FIX 2: Correct variable assignment ---
-    NUM_REFINER_IN_CHANNELS = 1 + NUM_REFINER_CLASSES # 1 for CT
-    
+    NUM_REFINER_OUT_CLASSES = args.num_refiner_out_classes
+    NUM_REFINER_IN_CHANNELS = args.num_refiner_in_channels # Use the new argument
+         
     refiner_model = Simple3DRefiner(
         in_channels=NUM_REFINER_IN_CHANNELS,
-        out_channels=NUM_REFINER_CLASSES
+        out_channels=NUM_REFINER_OUT_CLASSES
     ).to(DEVICE)
-    refiner_model.load_state_dict(torch.load(args.refiner_model_path, map_location=DEVICE))
+    
+    try:
+        refiner_model.load_state_dict(torch.load(args.refiner_model_path, map_location=DEVICE))
+    except RuntimeError as e:
+        print("\n" + "="*50)
+        print("   -> ❌ FATAL: Refiner Model Mismatch!")
+        print(f"   -> Error was: {e}")
+        print("   -> This usually means --num_refiner_out_classes or --num_refiner_in_channels is wrong.")
+        print("="*50 + "\n")
+        sys.exit(1)
+        
     refiner_model.eval()
     
     # 2. Resample original CT to match coarse map
     print("Resampling original CT to match coarse map...")
-    # We use 'preprocessed_vol' which is already resampled, normalized, and 3D
     ct_tensor = torch.from_numpy(preprocessed_vol).float().unsqueeze(0).unsqueeze(0)
     ct_resampled = F.interpolate(ct_tensor, size=coarse_prob_map.shape[:-1], mode='trilinear', align_corners=False)
     ct_resampled_np = ct_resampled.squeeze().numpy() # [D, H, W]
@@ -406,11 +455,21 @@ def main():
     gnn_map_ch_first = np.moveaxis(coarse_prob_map, -1, 0) # [C, D, H, W]
     ct_map_ch_first = np.expand_dims(ct_resampled_np, axis=0) # [1, D, H, W]
     
-    # --- Check for channel mismatch ---
-    if gnn_map_ch_first.shape[0] != NUM_GNN_CLASSES:
-         print(f"   -> ❌ FATAL: GNN prob map has {gnn_map_ch_first.shape[0]} channels, but model expects {NUM_GNN_CLASSES}.")
-         sys.exit(1)
-         
+    # --- ❗ NEW HACK: Truncate/Pad GNN map to match Refiner ---
+    # The refiner expects (NUM_REFINER_IN_CHANNELS - 1) GNN channels
+    expected_gnn_channels = NUM_REFINER_IN_CHANNELS - 1
+    current_gnn_channels = gnn_map_ch_first.shape[0]
+    
+    if current_gnn_channels > expected_gnn_channels:
+        print(f"   -> Warning: GNN map has {current_gnn_channels} channels, but refiner expects {expected_gnn_channels}. Truncating.")
+        gnn_map_ch_first = gnn_map_ch_first[:expected_gnn_channels, ...]
+    elif current_gnn_channels < expected_gnn_channels:
+        print(f"   -> Warning: GNN map has {current_gnn_channels} channels, but refiner expects {expected_gnn_channels}. Padding with zeros.")
+        pad_width = expected_gnn_channels - current_gnn_channels
+        pad_dims = [(0, pad_width)] + [(0, 0)] * (gnn_map_ch_first.ndim - 1)
+        gnn_map_ch_first = np.pad(gnn_map_ch_first, pad_dims, 'constant', constant_values=0)
+    # --- END HACK ---
+
     refiner_input_stack = np.concatenate([ct_map_ch_first, gnn_map_ch_first], axis=0)
     print(f"   -> Refiner input stack shape: {refiner_input_stack.shape}")
     
@@ -423,11 +482,8 @@ def main():
         refined_mask = coarse_mask
     else:
         print("   -> Found bounding box. Cropping and running refinement...")
-        # We need to find the *largest* bounding box
-        bbox = bbox_slices[0] # Just take the first one for simplicity
+        bbox = bbox_slices[0] 
         
-        # Crop the input stack
-        # Input is [C, D, H, W]
         slices = (slice(None), bbox[0], bbox[1], bbox[2])
         input_patch = refiner_input_stack[slices]
         
@@ -446,10 +502,8 @@ def main():
         original_patch_shape = input_patch.shape # [C, D, H, W]
         refined_logits_unpadded = pad_or_crop_to_size(refined_logits_patch_np, original_patch_shape[1:])
         
-        # Create a full-sized output volume
-        refined_logits_volume = np.zeros((NUM_REFINER_CLASSES,) + coarse_prob_map.shape[:-1], dtype=np.float32)
+        refined_logits_volume = np.zeros((NUM_REFINER_OUT_CLASSES,) + coarse_prob_map.shape[:-1], dtype=np.float32)
         
-        # Place the patch back in its bounding box
         refined_logits_volume[(slice(None), bbox[0], bbox[1], bbox[2])] = refined_logits_unpadded
         
         # 8. Get the final refined mask
@@ -460,10 +514,12 @@ def main():
     # --- PHASE 3: POST-PROCESSING (The "Pink Box") ---
     print("--- PHASE 3: Post-Processing ---")
     
-    # Let's do a simple per-class cleanup
     final_clean_mask = np.zeros_like(refined_mask)
-    for class_id in range(1, NUM_REFINER_CLASSES): # Skip background
+    for class_id in range(1, NUM_REFINER_OUT_CLASSES): # Skip background
         class_mask = (refined_mask == class_id)
+        if np.sum(class_mask) == 0: continue # Skip empty classes
+            
+        print(f"   -> Cleaning class {class_id}...")
         cleaned_class_mask = post_process_segmentation(
             class_mask, 
             min_size=args.min_object_size, 

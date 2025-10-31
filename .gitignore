@@ -3,3 +3,4 @@ output/
 dataset/
 *.pt
 data*/
+*.nii.gz
