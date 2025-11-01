@@ -1,0 +1,384 @@
+Finding all pipeline outputs in: output/run_PanTS_*
+Found 62 completed runs to evaluate.
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000001 ---
+   -> ❌ FAILED to evaluate PanTS_00000001.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000002 ---
+   -> ❌ FAILED to evaluate PanTS_00000002.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000003 ---
+   -> ❌ FAILED to evaluate PanTS_00000003.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000004 ---
+   -> ❌ FAILED to evaluate PanTS_00000004.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000005 ---
+   -> ❌ FAILED to evaluate PanTS_00000005.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000006 ---
+   -> ❌ FAILED to evaluate PanTS_00000006.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000007 ---
+   -> ❌ FAILED to evaluate PanTS_00000007.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000008 ---
+   -> ❌ FAILED to evaluate PanTS_00000008.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000009 ---
+   -> ❌ FAILED to evaluate PanTS_00000009.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000010 ---
+   -> ❌ FAILED to evaluate PanTS_00000010.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000011 ---
+   -> ❌ FAILED to evaluate PanTS_00000011.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000012 ---
+   -> ❌ FAILED to evaluate PanTS_00000012.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000013 ---
+   -> ❌ FAILED to evaluate PanTS_00000013.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000014 ---
+   -> ❌ FAILED to evaluate PanTS_00000014.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000015 ---
+   -> ❌ FAILED to evaluate PanTS_00000015.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000016 ---
+   -> ❌ FAILED to evaluate PanTS_00000016.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000017 ---
+   -> ❌ FAILED to evaluate PanTS_00000017.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000018 ---
+Loading Prediction: output/run_PanTS_00000018/final_segmentation.nii.gz
+Loading Label: PanTS/data/labelsTr/PanTS_00000018/combined_labels.nii.gz
+   -> Shapes match: (467, 277, 343)
+
+Found 27 classes to evaluate: [ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+ 25 26 27]
+   -> Dice for Class 1:  0.0000
+   -> Dice for Class 2:  0.0000
+   -> Dice for Class 3:  0.0000
+   -> Dice for Class 4:  0.0000
+   -> Dice for Class 5:  0.0000
+   -> Dice for Class 6:  0.0000
+   -> Dice for Class 7:  0.0000
+   -> Dice for Class 8:  0.0000
+   -> Dice for Class 9:  0.0000
+   -> Dice for Class 10:  0.0000
+   -> Dice for Class 11:  0.0000
+   -> Dice for Class 12:  0.0000
+   -> Dice for Class 13:  0.0000
+   -> Dice for Class 14:  0.0000
+   -> Dice for Class 15:  0.0000
+   -> Dice for Class 16:  0.0000
+   -> Dice for Class 17:  0.0000
+   -> Dice for Class 18:  0.0000
+   -> Dice for Class 19:  0.0000
+   -> Dice for Class 20:  0.0000
+   -> Dice for Class 21:  0.0000
+   -> Dice for Class 22:  0.0000
+   -> Dice for Class 23:  0.0000
+   -> Dice for Class 24:  0.0000
+   -> Dice for Class 25:  0.0000
+   -> Dice for Class 26:  0.0000
+   -> Dice for Class 27:  0.0000
+----------------------------------------
+📊 Mean Dice (all classes): 0.0000
+----------------------------------------
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000019 ---
+   -> ❌ FAILED to evaluate PanTS_00000019.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000020 ---
+   -> ❌ FAILED to evaluate PanTS_00000020.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000021 ---
+   -> ❌ FAILED to evaluate PanTS_00000021.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000022 ---
+   -> ❌ FAILED to evaluate PanTS_00000022.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000023 ---
+   -> ❌ FAILED to evaluate PanTS_00000023.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000024 ---
+   -> ❌ FAILED to evaluate PanTS_00000024.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000025 ---
+   -> ❌ FAILED to evaluate PanTS_00000025.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000026 ---
+   -> ❌ FAILED to evaluate PanTS_00000026.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000027 ---
+   -> ❌ FAILED to evaluate PanTS_00000027.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000028 ---
+   -> ❌ FAILED to evaluate PanTS_00000028.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000029 ---
+   -> ❌ FAILED to evaluate PanTS_00000029.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000030 ---
+   -> ❌ FAILED to evaluate PanTS_00000030.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000031 ---
+   -> ❌ FAILED to evaluate PanTS_00000031.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000032 ---
+   -> ❌ FAILED to evaluate PanTS_00000032.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000033 ---
+   -> ❌ FAILED to evaluate PanTS_00000033.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000034 ---
+   -> ❌ FAILED to evaluate PanTS_00000034.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000035 ---
+   -> ❌ FAILED to evaluate PanTS_00000035.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000036 ---
+   -> ❌ FAILED to evaluate PanTS_00000036.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000037 ---
+   -> ❌ FAILED to evaluate PanTS_00000037.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000038 ---
+   -> ❌ FAILED to evaluate PanTS_00000038.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000039 ---
+   -> ❌ FAILED to evaluate PanTS_00000039.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000040 ---
+   -> ❌ FAILED to evaluate PanTS_00000040.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000041 ---
+   -> ❌ FAILED to evaluate PanTS_00000041.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000042 ---
+   -> ❌ FAILED to evaluate PanTS_00000042.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000043 ---
+   -> ❌ FAILED to evaluate PanTS_00000043.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000044 ---
+   -> ❌ FAILED to evaluate PanTS_00000044.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000045 ---
+   -> ❌ FAILED to evaluate PanTS_00000045.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000046 ---
+   -> ❌ FAILED to evaluate PanTS_00000046.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000047 ---
+   -> ❌ FAILED to evaluate PanTS_00000047.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000048 ---
+   -> ❌ FAILED to evaluate PanTS_00000048.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000049 ---
+   -> ❌ FAILED to evaluate PanTS_00000049.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000050 ---
+   -> ❌ FAILED to evaluate PanTS_00000050.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000051 ---
+   -> ❌ FAILED to evaluate PanTS_00000051.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000052 ---
+Loading Prediction: output/run_PanTS_00000052/final_segmentation.nii.gz
+Loading Label: PanTS/data/labelsTr/PanTS_00000052/combined_labels.nii.gz
+   -> Shapes match: (507, 306, 362)
+
+Found 26 classes to evaluate: [ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 24 25
+ 26 27]
+   -> Dice for Class 1:  0.0000
+   -> Dice for Class 2:  0.0000
+   -> Dice for Class 3:  0.0000
+   -> Dice for Class 4:  0.0000
+   -> Dice for Class 5:  0.0000
+   -> Dice for Class 6:  0.0000
+   -> Dice for Class 7:  0.0000
+   -> Dice for Class 8:  0.0000
+   -> Dice for Class 9:  0.0000
+   -> Dice for Class 10:  0.0000
+   -> Dice for Class 11:  0.0000
+   -> Dice for Class 12:  0.0000
+   -> Dice for Class 13:  0.0000
+   -> Dice for Class 14:  0.0000
+   -> Dice for Class 15:  0.0000
+   -> Dice for Class 16:  0.0000
+   -> Dice for Class 17:  0.0000
+   -> Dice for Class 18:  0.0000
+   -> Dice for Class 19:  0.0000
+   -> Dice for Class 20:  0.0000
+   -> Dice for Class 21:  0.0000
+   -> Dice for Class 22:  0.0000
+   -> Dice for Class 24:  0.0000
+   -> Dice for Class 25:  0.0000
+   -> Dice for Class 26:  0.0000
+   -> Dice for Class 27:  0.0000
+----------------------------------------
+📊 Mean Dice (all classes): 0.0000
+----------------------------------------
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000053 ---
+   -> ❌ FAILED to evaluate PanTS_00000053.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000054 ---
+   -> ❌ FAILED to evaluate PanTS_00000054.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000055 ---
+   -> ❌ FAILED to evaluate PanTS_00000055.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000056 ---
+   -> ❌ FAILED to evaluate PanTS_00000056.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000057 ---
+   -> ❌ FAILED to evaluate PanTS_00000057.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000058 ---
+   -> ❌ FAILED to evaluate PanTS_00000058.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000059 ---
+   -> ❌ FAILED to evaluate PanTS_00000059.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000060 ---
+   -> ❌ FAILED to evaluate PanTS_00000060.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000061 ---
+   -> ❌ FAILED to evaluate PanTS_00000061.
+
+
+──────────────────────────────────────────────────
+--- Evaluating Case: PanTS_00000062 ---
+   -> ⚠️ SKIPPING: Cannot find prediction file: output/run_PanTS_00000062/final_segmentation.nii.gz
+
+====================================================
+📊 Final Average Dice over 2 cases: 0.0000
+====================================================

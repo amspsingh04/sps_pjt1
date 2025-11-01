@@ -5,7 +5,7 @@ import glob
 from tqdm import tqdm # For a nice progress bar, pip install tqdm
 
 # --- Configuration ---
-NUM_FILES_TO_RUN = 10
+NUM_FILES_TO_RUN = 100
 EPOCHS = 300
 LEARNING_RATE = 7e-4
 
@@ -34,7 +34,7 @@ def main():
         sys.exit(1)
 
     # Get just the first 10 files
-    files_to_process = list(zip(image_files, label_files))[:NUM_FILES_TO_RUN]
+    files_to_process = list(zip(image_files, label_files))[60:60+NUM_FILES_TO_RUN]
     
     print(f"Found {len(files_to_process)} file pairs to process.")
 
